@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="board">
+	<resultMap type="com.andw.web.model.BoardVo" id="board">
+		<result property="board_cd" column="BOARD_CD"/>
+		<result property="board_no" column="BOARD_NO"/>
+		<result property="board_classify_cd" column="BOARD_CLASSIFY_CD"/>
+		<result property="board_classify_cd_nm" column="BOARD_CLASSIFY_CD_NM"/>
+		<result property="title" column="TITLE"/>
+		<result property="contents" column="CONTENTS"/>
+		<result property="de_contents" column="DE_CONTENTS"/>
+		<result property="use_yn" column="USE_YN"/>
+		<result property="view_cnt" column="VIEW_CNT"/>
+		<result property="logo_file_group_no" column="LOGO_FILE_GROUP_NO"/>
+		<result property="thumb_file_group_no" column="THUMB_FILE_GROUP_NO"/>
+		<result property="visual_file_group_no" column="VISUAL_FILE_GROUP_NO"/>
+		<result property="project_client" column="PROJECT_CLIENT"/>
+		<result property="project_keyword" column="PROJECT_KEYWORD"/>
+		<result property="project_technology" column="PROJECT_TECHNOLOGY"/>
+		<result property="project_start_dt" column="PROJECT_START_DT"/>
+		<result property="project_end_dt" column="PROJECT_END_DT"/>
+		<result property="publish_dt" column="PUBLISH_DT"/>
+		<result property="sys_reg_dttm" column="SYS_REG_DTTM"/>
+		<result property="sys_upd_dttm" column="SYS_UPD_DTTM"/>
+		<result property="del_yn" column="DEL_YN"/>
+		<result property="view_yn" column="VIEW_YN"/>
+		<result property="top_yn" column="TOP_YN"/>
+		<result property="file_nm" column="FILE_NM"/>
+	</resultMap>
+	<select id="selectBoardCount" parameterType="com.andw.web.model.BoardVo" resultType="_int">
+		SELECT count(*)
+		FROM TB_BOARD_ITEM
+		WHERE BOARD_CD = '${board_cd}'
+			AND DEL_YN != 'Y'
+		<if test="classify != null and classify != ''">
+			AND BOARD_CLASSIFY_CD = '${classify}'
+		</if>
+		<if test="search_word != null and search_word != ''">
+			AND TITLE LIKE CONCAT('%','${search_word}','%')
+		</if>
+		<choose>
+			<when test="year != null and year != '' and (month == null or month == '')">
+				AND ((PROJECT_START_DT LIKE CONCAT('${year}','%')) OR (PROJECT_END_DT LIKE CONCAT('${year}','%')))
+			</when>
+			<when test="month != null and month != '' and (year == null or year == '')">
+				AND ((PROJECT_START_DT LIKE CONCAT('%','-','${month}','-','%')) OR (PROJECT_END_DT LIKE CONCAT('%','-','${month}','-','%')))
+			</when>
+			<when test="month != null and month != '' and year != null and year != ''">
+				AND ((PROJECT_START_DT LIKE CONCAT('${year}','-','${month}','%')) OR (PROJECT_END_DT LIKE CONCAT('${year}','-','${month}','%')))
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+		<if test="year != null and year != ''">
+			AND ((PROJECT_START_DT LIKE CONCAT('${year}','%')) OR (PROJECT_END_DT LIKE CONCAT('${year}','%')))
+		</if>
+		<if test="start_date != null and start_date != '' and end_date != null and end_date != ''">
+			AND DATE(SYS_REG_DTTM) BETWEEN '${start_date}' AND '${end_date}'
+		</if>
+		<if test='front_yn == "Y"'>
+			AND USE_YN = 'Y'
+		</if>
+	</select>
+	<select id="selectBoardList" parameterType="com.andw.web.model.BoardVo" resultMap="board">
+		SELECT 
+			a.BOARD_CD
+			,a.BOARD_NO
+			,a.TITLE
+			,a.USE_YN
+			,a.LOGO_FILE_GROUP_NO
+			,a.THUMB_FILE_GROUP_NO
+			,a.VISUAL_FILE_GROUP_NO
+			,a.PUBLISH_DT
+			,a.PROJECT_START_DT
+			,a.PROJECT_END_DT
+			,a.PROJECT_KEYWORD
+			,a.DE_CONTENTS
+			,a.SYS_REG_DTTM
+			,a.VIEW_YN
+			,b.CD_NM AS BOARD_CLASSIFY_CD_NM
+			,a.TOP_YN
+			,a.LIST_TYPE_YN
+			,a.PROJECT_CLIENT
+			,fn_getOrgFileNm(a.BOARD_NO) AS FILE_NM
+		FROM TB_BOARD_ITEM a
+		LEFT JOIN TB_CODE_ITEM b ON a.BOARD_CLASSIFY_CD = b.CD AND b.CD_GROUP_ID = 'BOARD_CLASSIFY_CD'
+		WHERE a.BOARD_CD = '${board_cd}'
+			AND DEL_YN != 'Y'
+		<if test="classify != null and classify != ''">
+			AND BOARD_CLASSIFY_CD = '${classify}'
+		</if>
+		<if test="search_word != null and search_word != ''">
+			AND a.TITLE LIKE CONCAT('%','${search_word}','%')
+		</if>
+		<choose>
+			<when test="year != null and year != '' and (month == null or month == '')">
+				AND ((a.PROJECT_START_DT LIKE CONCAT('${year}','%')) OR (a.PROJECT_END_DT LIKE CONCAT('${year}','%')))
+			</when>
+			<when test="month != null and month != '' and (year == null or year == '')">
+				AND ((a.PROJECT_START_DT LIKE CONCAT('%','-','${month}','-','%')) OR (a.PROJECT_END_DT LIKE CONCAT('%','-','${month}','-','%')))
+			</when>
+			<when test="month != null and month != '' and year != null and year != ''">
+				AND ((a.PROJECT_START_DT LIKE CONCAT('${year}','-','${month}','%')) OR (a.PROJECT_END_DT LIKE CONCAT('${year}','-','${month}','%')))
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+		<if test="start_date != null and start_date != '' and end_date != null and end_date != ''">
+			AND  DATE(a.SYS_REG_DTTM) BETWEEN '${start_date}' AND '${end_date}'
+		</if>
+		<if test='front_yn == "Y"'>
+			AND a.USE_YN = 'Y'
+		</if>
+		<if test='view_yn == "Y"'>
+			AND a.view_yn = 'Y'
+		</if>
+		<choose>
+			<when test="sort == 'sort01'">
+				ORDER BY FIELD(a.top_yn, 'N', 'Y') DESC,a.SYS_REG_DTTM DESC
+			</when>
+			<when test='front_yn == "Y" and board_cd == "01"'>
+				ORDER BY FIELD(a.top_yn, 'N', 'Y') DESC, a.SYS_REG_DTTM DESC
+			</when> 
+			<when test='sort == "sort02"'>
+				ORDER BY FIELD(a.top_yn, 'N', 'Y') DESC,a.PROJECT_START_DT DESC
+			</when> 
+			
+			<when test="sort == 'sort03'">
+				ORDER BY FIELD(a.top_yn, 'N', 'Y') DESC,a.TITLE ASC
+			</when>
+			<when test='front_yn == "Y" and board_cd == "02"'>
+				ORDER BY a.PUBLISH_DT DESC
+			</when>
+			<otherwise>
+				ORDER BY FIELD(a.top_yn, 'N', 'Y') DESC,a.SYS_REG_DTTM DESC
+			</otherwise>
+		</choose>
+		<if test="start_num != null and end_num != null">
+			LIMIT #{start_num}, #{end_num}
+		</if>
+	</select>
+	<insert id="insertBoardItem" parameterType="com.andw.web.model.BoardVo">
+		INSERT INTO TB_BOARD_ITEM
+		(
+		BOARD_CD
+		,BOARD_NO
+		,BOARD_CLASSIFY_CD
+		,TITLE
+		,CONTENTS
+		,DE_CONTENTS
+		,USE_YN
+		,VIEW_CNT
+		<if test="publish_dt != null">
+			,PUBLISH_DT
+		</if>
+		<if test="logo_file_group_no != null">
+			,LOGO_FILE_GROUP_NO
+		</if>
+		<if test="thumb_file_group_no != null">
+			,THUMB_FILE_GROUP_NO
+		</if>
+		<if test="visual_file_group_no != null">
+			,VISUAL_FILE_GROUP_NO
+		</if>
+		,PROJECT_CLIENT
+		,PROJECT_KEYWORD
+		<if test="project_start_dt != null">
+			,PROJECT_START_DT
+		</if>
+		<if test="project_end_dt != null">
+			,PROJECT_END_DT
+		</if>
+		,SYS_REG_DTTM
+		,SYS_UPD_DTTM
+		,DEL_YN
+		,VIEW_YN
+		,TOP_YN
+		,LIST_TYPE_YN
+		)
+		VALUE
+		(
+		'${board_cd}'
+		,(SELECT IFNULL(MAX(b.BOARD_NO) + 1, 1) AS BOARD_NO FROM TB_BOARD_ITEM b WHERE BOARD_CD = '${board_cd}')
+		,'${board_classify_cd}'
+		,'${title}'
+		,'${contents}'
+		,'${de_contents}'
+		,'${use_yn}'
+		,0
+		<if test="publish_dt != null">
+			,'${publish_dt}'
+		</if>
+		<if test="logo_file_group_no != null">
+			,'${logo_file_group_no}'
+		</if>
+		<if test="thumb_file_group_no != null">
+			,'${thumb_file_group_no}'
+		</if>
+		<if test="visual_file_group_no != null">
+			,'${visual_file_group_no}'
+		</if>
+		,'${project_client}'
+		,'${project_keyword}'
+		<if test="project_start_dt != null">
+			,'${project_start_dt}'
+		</if>
+		<if test="project_end_dt != null">
+			,'${project_end_dt}'
+		</if>
+		,now()
+		,now()
+		,'N'
+		,'${view_yn}'
+		,'${top_yn}'
+		,'${list_type_yn}'
+		) 
+	</insert>
+	<select id="selectBoardItem" parameterType="com.andw.web.model.BoardVo" resultMap="board">
+		SELECT 
+			a.BOARD_CD
+			,a.BOARD_NO
+			,a.TITLE
+			,a.BOARD_CLASSIFY_CD
+			,a.USE_YN
+			,a.LOGO_FILE_GROUP_NO
+			,a.THUMB_FILE_GROUP_NO
+			,a.VISUAL_FILE_GROUP_NO
+			,a.PROJECT_START_DT
+			,a.PROJECT_END_DT
+			,a.PROJECT_CLIENT
+			,a.PROJECT_KEYWORD
+			,a.PROJECT_TECHNOLOGY
+			,a.PUBLISH_DT
+			,a.SYS_REG_DTTM
+			,a.CONTENTS
+			,a.DE_CONTENTS
+			,a.DEL_YN
+			,a.VIEW_YN
+			,b.CD_NM AS BOARD_CLASSIFY_CD_NM
+			,a.TOP_YN
+			,a.LIST_TYPE_YN
+		FROM TB_BOARD_ITEM a
+		LEFT JOIN TB_CODE_ITEM b ON a.BOARD_CLASSIFY_CD = b.CD AND b.CD_GROUP_ID = 'BOARD_CLASSIFY_CD'
+		WHERE a.BOARD_CD = '${board_cd}'
+			AND BOARD_NO = '${board_no}'
+	</select>
+	<update id="updateBoardItem" parameterType="com.andw.web.model.BoardVo">
+		UPDATE TB_BOARD_ITEM
+		SET BOARD_CLASSIFY_CD = '${board_classify_cd}'
+			,TITLE = '${title}'
+			,CONTENTS = '${contents}'
+			,DE_CONTENTS = '${de_contents}'
+			,USE_YN = '${use_yn}'
+			,PROJECT_CLIENT = '${project_client}'
+			,PROJECT_KEYWORD = '${project_keyword}'
+			<if test="project_start_dt != null">
+				,PROJECT_START_DT = '${project_start_dt}'
+			</if>
+			<if test="project_end_dt != null">
+				,PROJECT_END_DT = '${project_end_dt}'
+			</if>
+			<if test="publish_dt != null">
+				,PUBLISH_DT = '${publish_dt}'
+			</if>
+				,SYS_UPD_DTTM = now()
+			<if test="logo_file_group_no != null">
+				,LOGO_FILE_GROUP_NO = '${logo_file_group_no}'
+			</if>
+			<if test="thumb_file_group_no != null">
+				,THUMB_FILE_GROUP_NO = '${thumb_file_group_no}'
+			</if>
+			<if test="visual_file_group_no != null">
+				,VISUAL_FILE_GROUP_NO = '${visual_file_group_no}'
+			</if>
+			,VIEW_YN = '${view_yn}'
+			,TOP_YN = '${top_yn}'
+			,LIST_TYPE_YN = '${list_type_yn}'
+		WHERE BOARD_CD = '${board_cd}'
+			AND BOARD_NO = '${board_no}'
+	</update>
+	<update id="deleteBoardItem" parameterType="com.andw.web.model.BoardVo">
+		UPDATE TB_BOARD_ITEM
+		SET DEL_YN = 'Y'
+		WHERE BOARD_CD = '${board_cd}'
+			AND BOARD_NO = '${board_no}'
+	</update>
+
+
+</mapper>

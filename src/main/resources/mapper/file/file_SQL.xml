@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="file">
+	<resultMap type="com.andw.web.model.FileVo" id="file">
+		<result property="file_group_no" column="FILE_GROUP_NO"/>
+		<result property="file_path" column="FILE_PATH"/>
+		<result property="file_seq" column="FILE_SEQ"/>
+		<result property="org_file_nm" column="ORG_FILE_NM"/>
+		<result property="re_file_nm" column="RE_FILE_NM"/>
+		<result property="file_extension" column="FILE_EXTENSION"/>
+	</resultMap>
+	<select id="selectMaxFileGroupNo" parameterType="com.andw.web.model.FileVo" resultType="_int">
+		SELECT IFNULL(MAX(FILE_GROUP_NO) + 1, 1) AS FILE_GROUP_NO
+		FROM TB_FILE_GROUP
+	</select>
+	<select id="selectFileGroupItem" parameterType="com.andw.web.model.FileVo" resultMap="file">
+		SELECT a.FILE_GROUP_NO 
+			,a.FILE_SEQ 
+			,a.ORG_FILE_NM 
+			,a.RE_FILE_NM 
+			,b.FILE_PATH
+		FROM TB_FILE_GROUP_ITEM a
+		LEFT JOIN TB_FILE_GROUP b ON a.FILE_GROUP_NO = b.FILE_GROUP_NO 
+		WHERE a.FILE_GROUP_NO = '${file_group_no}'
+		ORDER BY FILE_SEQ
+	</select>
+	<insert id="insertFileGroup" parameterType="com.andw.web.model.FileVo">
+		INSERT
+		INTO TB_FILE_GROUP
+		(
+		FILE_GROUP_NO
+		,FILE_PATH
+		,SYS_REG_DTTM
+		,SYS_UPD_DTTM
+		)
+		VALUES
+		(
+		'${file_group_no}'
+		,'${file_path}'
+		,now()
+		,now()
+		)
+	</insert>
+	<insert id="insertFileGroupItem" parameterType="com.andw.web.model.FileVo">
+		INSERT
+		INTO TB_FILE_GROUP_ITEM
+		(
+		FILE_GROUP_NO
+		,FILE_SEQ
+		,ORG_FILE_NM
+		,RE_FILE_NM
+		,FILE_EXTENSION
+		,SYS_REG_DTTM
+		,SYS_UPD_DTTM
+		)
+		VALUES
+		(
+		'${file_group_no}'
+		,'${file_seq}'
+		,'${org_file_nm}'
+		,'${re_file_nm}'
+		,null
+		,now()
+		,now()
+		)
+	
+	</insert>
+
+</mapper>

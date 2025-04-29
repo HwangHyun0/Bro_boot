@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="careers">
+	<resultMap type="com.andw.web.model.CareersVo" id="careers">
+		<result property="applicant_no" column="APPLICANT_NO"/>
+		<result property="applicant_classify_cd01" column="APPLICANT_CLASSIFY_CD01"/>
+		<result property="applicant_classify_cd01_nm" column="APPLICANT_CLASSIFY_CD01_NM"/>
+		<result property="applicant_classify_cd02" column="APPLICANT_CLASSIFY_CD02"/>
+		<result property="applicant_classify_cd02_nm" column="APPLICANT_CLASSIFY_CD02_NM"/>
+		<result property="applicant_nm" column="APPLICANT_NM"/>
+		<result property="applicant_email" column="APPLICANT_EMAIL"/>
+		<result property="applicant_tel" column="APPLICANT_TEL"/>
+		<result property="applicant_link" column="APPLICANT_LINK"/>
+		<result property="applicant_content" column="APPLICANT_CONTENT"/>
+		<result property="agree_yn" column="AGREE_YN"/>
+		<result property="sys_reg_dttm" column="SYS_REG_DTTM"/>
+		<result property="sys_upd_dttm" column="SYS_UPD_DTTM"/>
+	</resultMap>
+	<select id="selectCareersCount" parameterType="com.andw.web.model.CareersVo" resultType="_int">
+		SELECT count(*)
+		FROM TB_CAREERS
+		WHERE 1=1
+		<if test="search_word != null and search_word != ''">
+			AND APPLICANT_NM LIKE CONCAT('%','${search_word}','%')
+		</if>
+		<if test="year != null and year != ''">
+			AND SYS_REG_DTTM LIKE CONCAT('${year}','%')
+		</if>
+		<if test="classify != null and classify != ''">
+			AND APPLICANT_CLASSIFY_CD02 = '${classify}'
+		</if>
+	</select>
+	
+	<select id="selectCareersList" parameterType="com.andw.web.model.CareersVo" resultMap="careers">
+		SELECT a.APPLICANT_NO 
+			,b.CD_NM AS APPLICANT_CLASSIFY_CD01_NM
+			,c.CD_NM AS APPLICANT_CLASSIFY_CD02_NM
+			,a.APPLICANT_NM 
+			,a.SYS_REG_DTTM
+		FROM TB_CAREERS a 
+		LEFT JOIN TB_CODE_ITEM b ON a.APPLICANT_CLASSIFY_CD01 = b.CD AND b.CD_GROUP_ID = 'APPLICANT_CLASSIFY_CD01'
+		LEFT JOIN TB_CODE_ITEM c ON a.APPLICANT_CLASSIFY_CD02 = c.CD AND c.CD_GROUP_ID = 'APPLICANT_CLASSIFY_CD02'
+		WHERE 1=1
+		<if test="search_word != null and search_word != ''">
+			AND a.APPLICANT_NM LIKE CONCAT('%','${search_word}','%')
+		</if>
+		<if test="year != null and year != ''">
+			AND a.SYS_REG_DTTM LIKE CONCAT('${year}','%')
+		</if>
+		<if test="classify != null and classify != ''">
+			AND a.APPLICANT_CLASSIFY_CD02 = '${classify}'
+		</if>
+		ORDER BY a.SYS_REG_DTTM DESC
+		LIMIT #{start_num}, #{end_num}
+	</select>
+	
+	<select id="selectCareers" parameterType="com.andw.web.model.CareersVo" resultMap="careers">
+		SELECT a.APPLICANT_NO 
+			,b.CD_NM AS APPLICANT_CLASSIFY_CD01_NM
+			,c.CD_NM AS APPLICANT_CLASSIFY_CD02_NM
+			,a.APPLICANT_NM 
+			,a.APPLICANT_EMAIL 
+			,a.APPLICANT_TEL 
+			,a.APPLICANT_LINK 
+			,a.APPLICANT_CONTENT 
+			,a.FILE_GROUP_NO
+			,a.SYS_REG_DTTM
+			,a.AGREE_YN
+			,d.FILE_PATH 
+			,e.ORG_FILE_NM 
+			,e.RE_FILE_NM 
+			,e.FILE_SEQ 
+		FROM TB_CAREERS a 
+		LEFT JOIN TB_CODE_ITEM b ON a.APPLICANT_CLASSIFY_CD01 = b.CD AND b.CD_GROUP_ID = 'APPLICANT_CLASSIFY_CD01'
+		LEFT JOIN TB_CODE_ITEM c ON a.APPLICANT_CLASSIFY_CD02 = c.CD AND c.CD_GROUP_ID = 'APPLICANT_CLASSIFY_CD02'
+		LEFT JOIN TB_FILE_GROUP d ON a.FILE_GROUP_NO = d.FILE_GROUP_NO 
+	    LEFT JOIN TB_FILE_GROUP_ITEM e on a.FILE_GROUP_NO = e.FILE_GROUP_NO
+	    WHERE a.APPLICANT_NO = '${applicant_no}';
+	</select>
+	
+	<insert id="insertCareers" parameterType="com.andw.web.model.CareersVo">
+		INSERT INTO TB_CAREERS
+		(
+		APPLICANT_CLASSIFY_CD01
+		,APPLICANT_CLASSIFY_CD02
+		,APPLICANT_NM
+		,APPLICANT_EMAIL
+		,APPLICANT_TEL
+		<if test="applicant_link != null">
+			,APPLICANT_LINK
+		</if>
+		<if test="applicant_content != null">
+			,APPLICANT_CONTENT
+		</if>
+		<if test="file_group_no != null">
+			,FILE_GROUP_NO
+		</if>
+		,AGREE_YN
+		,SYS_REG_DTTM
+		,SYS_UPD_DTTM
+		)
+		VALUE
+		(
+		'${applicant_classify_cd01}'
+		,'${applicant_classify_cd02}'
+		,'${applicant_nm}'
+		,'${applicant_email}'
+		,'${applicant_tel}'
+		<if test="applicant_link != null">
+			,'${applicant_link}'
+		</if>
+		<if test="applicant_content != null">
+			,'${applicant_content}'
+		</if>
+		<if test="file_group_no != null">
+			,'${file_group_no}'
+		</if>
+		,'${agree_yn}'
+		,now()
+		,now()
+		) 
+	</insert>
+	
+	<delete id="deleteCareers" parameterType="com.andw.web.model.CareersVo">
+		DELETE
+		FROM TB_CAREERS
+		WHERE APPLICANT_NO = '${applicant_no}'
+	</delete>
+
+</mapper>
